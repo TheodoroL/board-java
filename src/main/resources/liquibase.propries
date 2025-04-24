@@ -1,0 +1,5 @@
+changeLogFile=src/main/resources/db/changelog/db.changelog-master.yml
+url=jdbc:postgres://localhost/board
+username=postgres
+password=12345678
+driver=org.postgresql.Driver
