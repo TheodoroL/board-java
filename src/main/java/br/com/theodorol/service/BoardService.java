@@ -1,4 +1,4 @@
-package br.com.theodorol.percistence.migration;
+package br.com.theodorol.service;
 
 import br.com.theodorol.percistence.dao.BoardDAO;
 
