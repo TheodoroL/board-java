@@ -4,6 +4,8 @@ public class BoardColumnsEntity {
     private  Long idBoardColum;
     private  String name;
     private Integer order;
+    private BoardColumnKindEnum kind;
+    private BoardEntity board = new BoardEntity();
 
     public BoardColumnKindEnum getKind() {
         return kind;
@@ -37,6 +39,11 @@ public class BoardColumnsEntity {
         this.idBoardColum = idBoardColum;
     }
 
-    private BoardColumnKindEnum kind;
+    public BoardEntity getBoard() {
+        return board;
+    }
 
+    public void setBoard(BoardEntity board) {
+        this.board = board;
+    }
 }

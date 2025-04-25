@@ -1,7 +1,4 @@
 package br.com.theodorol.percistence.entity;
-
-import lombok.Data;
-
 import java.time.OffsetDateTime;
 
 public class BlockEntity {
