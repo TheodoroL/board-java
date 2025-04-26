@@ -4,6 +4,7 @@ import br.com.theodorol.percistence.entity.BoardColumnsEntity;
 import br.com.theodorol.percistence.entity.BoardEntity;
 import br.com.theodorol.service.BoardColumnQueryService;
 import br.com.theodorol.service.BoardQueryService;
+import br.com.theodorol.service.CardQueryService;
 
 import java.sql.SQLException;
 import java.util.Scanner;
@@ -69,21 +70,18 @@ public class BoardMenu {
 
     private void showBoard() throws SQLException {
         try(var connection = getConnection()){
-           var optional =  new BoardQueryService(connection)
+            var optional =  new BoardQueryService(connection)
                     .showBoardDetails(entity.getBoardId());
-           optional.ifPresent(b-> {
-               System.out.printf("Board [%s, %s]\n", b.id(), b.name());
+            optional.ifPresent(b-> {
+                System.out.printf("Board [%s, %s]\n", b.id(), b.name());
                 b.columns().forEach(c->{
                     System.out.printf("coluna [%s] tipo : %s cards ", c.name(), c.kind());
                 });
-           });
+            });
         }
     }
 
-    private void showColumn() {
-    }
-
-    private void showCard()throws SQLException {
+    private void showColumn() throws SQLException {
         var columnsIds = entity.getBoardColumns().stream().map(BoardColumnsEntity::getIdBoardColum).toList();
         var selectedColumn = -1L;
         while (!columnsIds.contains(selectedColumn)){
@@ -98,6 +96,25 @@ public class BoardMenu {
                 co.getCards().forEach(ca -> System.out.printf("Card %s - %s\nDescrição: %s",
                         ca.getIdCard(), ca.getTitle(), ca.getDescription()));
             });
+        }
+    }
+
+    private void showCard()throws SQLException {
+        System.out.println("Informe o id do card que deseja visualizar");
+        var selectedCardId = scanner.nextLong();
+        try(var connection  = getConnection()){
+            new CardQueryService(connection).findById(selectedCardId)
+                    .ifPresentOrElse(
+                            c -> {
+                                System.out.printf("Card %s - %s.\n", c.id(), c.title());
+                                System.out.printf("Descrição: %s\n", c.description());
+                                System.out.println(c.blocked() ?
+                                        "Está bloqueado. Motivo: " + c.blockReason() :
+                                        "Não está bloqueado");
+                                System.out.printf("Já foi bloqueado %s vezes", c.blocksAmount());
+                                System.out.printf("Está no momento na coluna %s - %s\n", c.columnId(), c.columnName());
+                            },
+                            () -> System.out.printf("Não existe um card com o id %s\n", selectedCardId));
         }
     }
 }

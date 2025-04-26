@@ -1,3 +1,4 @@
+
 package br.com.theodorol.ui;
 
 import br.com.theodorol.percistence.entity.BoardColumnKindEnum;
