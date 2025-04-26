@@ -1,17 +1,19 @@
 package br.com.theodorol.percistence.dao;
 
+import br.com.theodorol.percistence.entity.BoardColumnKindEnum;
 import br.com.theodorol.percistence.entity.BoardColumnsEntity;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
 
-public class BoardColumDAO {
+public class BoardColumnDAO {
     private final Connection connection;
 
-    public BoardColumDAO(Connection connection) {
+    public BoardColumnDAO(Connection connection) {
         this.connection = connection;
     }
 
@@ -36,6 +38,21 @@ public class BoardColumDAO {
         return entity;
     }
     public List<BoardColumnsEntity> findByBoardId(final Long id) throws SQLException{
+        List<BoardColumnsEntity> entities = new ArrayList<>();
+        var sql = "SELECT id_board_column, name, 'order' FROM BOARD_COLUMNS WHERE board_id = ? ORDER BY 'order'";
+        try(var statement = connection.prepareStatement(sql)){
+            statement.setLong(1, id);
+            statement.executeQuery();
+            var result =statement.getResultSet();
+            while (result.next()){
+                BoardColumnsEntity boardColumns = new BoardColumnsEntity();
+                boardColumns.setIdBoardColum(result.getLong("id_board_column"));
+                boardColumns.setName(result.getString("name"));
+                boardColumns.setOrder(result.getInt("order"));
+                boardColumns.setKind(BoardColumnKindEnum.findByName(result.getString("kind")));
+                entities.add(boardColumns);
+            }
+        }
         return null;
     }
 }

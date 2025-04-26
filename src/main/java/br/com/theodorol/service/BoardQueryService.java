@@ -1,6 +1,6 @@
 package br.com.theodorol.service;
 
-import br.com.theodorol.percistence.dao.BoardColumDAO;
+import br.com.theodorol.percistence.dao.BoardColumnDAO;
 import br.com.theodorol.percistence.dao.BoardDAO;
 import br.com.theodorol.percistence.entity.BoardEntity;
 
@@ -17,7 +17,7 @@ public class BoardQueryService {
 
     public Optional<BoardEntity> findById(Long id) throws SQLException {
         var dao = new BoardDAO(connection);
-        var boardColumnDAO = new BoardColumDAO(connection);
+        var boardColumnDAO = new BoardColumnDAO(connection);
         var optional = dao.findById(id);
         if (optional.isPresent()) {
             var entity = optional.get();
