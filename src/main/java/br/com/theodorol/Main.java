@@ -1,6 +1,7 @@
 package br.com.theodorol;
 
 import br.com.theodorol.percistence.migration.MigrationStrategy;
+import br.com.theodorol.ui.MainMenu;
 
 import java.sql.SQLException;
 
@@ -12,5 +13,6 @@ public class Main {
         new MigrationStrategy(connection).executeMigration();
 
     }
+    new MainMenu().execute();
     }
 }

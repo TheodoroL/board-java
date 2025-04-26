@@ -18,7 +18,7 @@ public class BoardColumnDAO {
     }
 
     public BoardColumnsEntity insert(BoardColumnsEntity entity) throws SQLException {
-        String sql = "INSERT INTO BOARD_COLUMNS (name, `order`, kind, board_id) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO BOARD_COLUMNS (name, \"order\", kind, board_id) VALUES (?, ?, ?, ?)";
         try (PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             int i = 1;
             statement.setString(i++, entity.getName());
@@ -39,7 +39,7 @@ public class BoardColumnDAO {
     }
     public List<BoardColumnsEntity> findByBoardId(final Long id) throws SQLException{
         List<BoardColumnsEntity> entities = new ArrayList<>();
-        var sql = "SELECT id_board_column, name, 'order' FROM BOARD_COLUMNS WHERE board_id = ? ORDER BY 'order'";
+        String sql = "SELECT * FROM board_columns WHERE board_id = ? ORDER BY \"order\";";
         try(var statement = connection.prepareStatement(sql)){
             statement.setLong(1, id);
             statement.executeQuery();

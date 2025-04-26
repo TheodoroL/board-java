@@ -15,49 +15,52 @@ public class BoardDAO {
     }
 
     public BoardEntity insert(final BoardEntity entity) throws SQLException {
-        String sql = "INSERT INTO BOARDS (name) VALUES (?) RETURNING id;";
+        final String sql = "INSERT INTO board (name) VALUES (?) RETURNING id_board;";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, entity.getName());
-            ResultSet resultSet = statement.executeQuery();
-            if (resultSet.next()) {
-                entity.setBoardId(resultSet.getLong("id"));
+            try (ResultSet rs = statement.executeQuery()) {
+                if (rs.next()) {
+                    entity.setBoardId(rs.getLong("id_board"));
+                }
             }
-            return entity;
         }
+        return entity;
     }
 
-    // Deletar Board pelo ID
     public void delete(final Long id) throws SQLException {
-        String sql = "DELETE FROM BOARDS WHERE id = ?;";
+        final String sql = "DELETE FROM board WHERE id_board = ?;";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setLong(1, id);
             statement.executeUpdate();
         }
     }
 
-    // Buscar Board por ID
     public Optional<BoardEntity> findById(final Long id) throws SQLException {
-        String sql = "SELECT id, name FROM BOARDS WHERE id = ?;";
+        final String sql = "SELECT id_board, name FROM board WHERE id_board = ?;";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setLong(1, id);
-            ResultSet resultSet = statement.executeQuery();
-            if (resultSet.next()) {
-                BoardEntity entity = new BoardEntity();
-                entity.setBoardId(resultSet.getLong("id"));
-                entity.setName(resultSet.getString("name"));
-                return Optional.of(entity);
+            try (ResultSet rs = statement.executeQuery()) {
+                if (rs.next()) {
+                    BoardEntity entity = new BoardEntity();
+                    entity.setBoardId(rs.getLong("id_board"));
+                    entity.setName(rs.getString("name"));
+                    return Optional.of(entity);
+                }
             }
-            return Optional.empty();
         }
+        return Optional.empty();
     }
 
-    // Verificar se Board existe pelo ID
     public boolean exists(final Long id) throws SQLException {
-        String sql = "SELECT 1 FROM BOARDS WHERE id = ?;";
+        final String sql = "SELECT EXISTS (SELECT 1 FROM board WHERE id_board = ?);";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setLong(1, id);
-            ResultSet resultSet = statement.executeQuery();
-            return resultSet.next();
+            try (ResultSet rs = statement.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getBoolean(1);
+                }
+            }
         }
+        return false;
     }
 }
