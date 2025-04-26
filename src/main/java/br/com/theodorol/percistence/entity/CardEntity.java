@@ -3,17 +3,17 @@ package br.com.theodorol.percistence.entity;
 
 public class CardEntity {
 
-   private Long id_card;
+   private Long idCard;
    private String name;
    private String title;
    private String description;
 
-   public Long getId_card() {
-      return id_card;
+   public Long getIdCard() {
+      return idCard;
    }
 
-   public void setId_card(Long id_card) {
-      this.id_card = id_card;
+   public void setidCard(Long id_card) {
+      this.idCard = id_card;
    }
 
    public String getName() {

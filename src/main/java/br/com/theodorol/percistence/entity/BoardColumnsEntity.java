@@ -1,5 +1,8 @@
 package br.com.theodorol.percistence.entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class BoardColumnsEntity {
     private  Long idBoardColum;
     private  String name;
@@ -7,6 +10,15 @@ public class BoardColumnsEntity {
     private BoardColumnKindEnum kind;
     private BoardEntity board = new BoardEntity();
 
+    public List<CardEntity> getCards() {
+        return cards;
+    }
+
+    public void setCards(List<CardEntity> cards) {
+        this.cards = cards;
+    }
+
+    private List<CardEntity> cards = new ArrayList<>();
     public BoardColumnKindEnum getKind() {
         return kind;
     }

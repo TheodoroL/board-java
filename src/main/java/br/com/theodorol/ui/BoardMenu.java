@@ -1,6 +1,8 @@
 package br.com.theodorol.ui;
 
+import br.com.theodorol.percistence.entity.BoardColumnsEntity;
 import br.com.theodorol.percistence.entity.BoardEntity;
+import br.com.theodorol.service.BoardColumnQueryService;
 import br.com.theodorol.service.BoardQueryService;
 
 import java.sql.SQLException;
@@ -81,6 +83,21 @@ public class BoardMenu {
     private void showColumn() {
     }
 
-    private void showCard() {
+    private void showCard()throws SQLException {
+        var columnsIds = entity.getBoardColumns().stream().map(BoardColumnsEntity::getIdBoardColum).toList();
+        var selectedColumn = -1L;
+        while (!columnsIds.contains(selectedColumn)){
+            System.out.printf("Escolha uma coluna do board %s\n", entity.getName());
+            entity.getBoardColumns().forEach(c -> System.out.printf("%s - %s [%s]\n", c.getIdBoardColum(), c.getName(), c.getKind()));
+            selectedColumn = scanner.nextLong();
+        }
+        try(var connection = getConnection()){
+            var column = new BoardColumnQueryService(connection).findById(selectedColumn);
+            column.ifPresent(co -> {
+                System.out.printf("Coluna %s tipo %s\n", co.getName(), co.getKind());
+                co.getCards().forEach(ca -> System.out.printf("Card %s - %s\nDescrição: %s",
+                        ca.getIdCard(), ca.getTitle(), ca.getDescription()));
+            });
+        }
     }
 }

@@ -3,6 +3,8 @@ package br.com.theodorol.percistence.dao;
 import br.com.theodorol.dto.BoardColumDTO;
 import br.com.theodorol.percistence.entity.BoardColumnKindEnum;
 import br.com.theodorol.percistence.entity.BoardColumnsEntity;
+import br.com.theodorol.percistence.entity.CardEntity;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -10,6 +12,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+
+import static br.com.theodorol.percistence.entity.BoardColumnKindEnum.findByName;
 
 public class BoardColumnDAO {
     private final Connection connection;
@@ -38,11 +43,11 @@ public class BoardColumnDAO {
 
         return entity;
     }
-    public List<BoardColumnsEntity> findByBoardId(final Long id) throws SQLException{
+    public List<BoardColumnsEntity> findByBoardId(Long boardId) throws SQLException{
         List<BoardColumnsEntity> entities = new ArrayList<>();
         String sql = "ELECT id, name, \"order\", kind FROM BOARDS_COLUMNS WHERE board_id = ? ORDER BY \"order\";";
         try(var statement = connection.prepareStatement(sql)){
-            statement.setLong(1, id);
+            statement.setLong(1, boardId);
             statement.executeQuery();
             var result =statement.getResultSet();
             while (result.next()){
@@ -50,13 +55,13 @@ public class BoardColumnDAO {
                 boardColumns.setIdBoardColum(result.getLong("id_board_column"));
                 boardColumns.setName(result.getString("name"));
                 boardColumns.setOrder(result.getInt("order"));
-                boardColumns.setKind(BoardColumnKindEnum.findByName(result.getString("kind")));
+                boardColumns.setKind(findByName(result.getString("kind")));
                 entities.add(boardColumns);
             }
         }
         return entities;
     }
-    public List<BoardColumDTO> findByBoardIdWithDetails( Long id) throws SQLException{
+    public List<BoardColumDTO> findByBoardIdWithDetails( Long boardId) throws SQLException{
         List<BoardColumDTO> dtos = new ArrayList<>();
         var sql =
                 """
@@ -79,18 +84,51 @@ public class BoardColumnDAO {
 
 
         try(var statement = connection.prepareStatement(sql)){
-            statement.setLong(1, id);
+            statement.setLong(1, boardId);
             statement.executeQuery();
             var result =statement.getResultSet();
             while (result.next()){
                 var boardColumns = new BoardColumDTO(
                         result.getLong("id_board_column"),
                         result.getString("name"),
-                        BoardColumnKindEnum.findByName(result.getString("kind")
+                        findByName(result.getString("kind")
                         ));
                 dtos.add(boardColumns);
             }
         }
         return dtos;
+    }
+
+    public Optional<BoardColumnsEntity> findById(final Long boardId) throws SQLException{
+        var sql =
+                """
+                SELECT bc.name,
+                       bc.kind,
+                       c.id,
+                       c.title,
+                       c.description
+                  FROM BOARDS_COLUMNS bc
+                 INNER JOIN CARDS c
+                    ON c.board_column_id = bc.id
+                 WHERE bc.id = ?;
+                """;
+        try(var statement = connection.prepareStatement(sql)){
+            statement.setLong(1, boardId);
+            statement.executeQuery();
+            var resultSet = statement.getResultSet();
+            if (resultSet.next()){
+                var entity = new BoardColumnsEntity();
+                entity.setName(resultSet.getString("bc.name"));
+                entity.setKind(findByName(resultSet.getString("bc.kind")));
+                do {
+                    var card = new CardEntity();
+                    card.setidCard(resultSet.getLong("c.di"));
+                    card.setTitle(resultSet.getString("c.title"));
+                    card.setDescription(resultSet.getString("c.description"));
+                    entity.getCards().add(card);
+                }while (resultSet.next());
+            }
+            return Optional.empty();
+        }
     }
 }
