@@ -1,5 +1,6 @@
 package br.com.theodorol.percistence.dao;
 
+import br.com.theodorol.dto.BoardColumDTO;
 import br.com.theodorol.percistence.entity.BoardColumnKindEnum;
 import br.com.theodorol.percistence.entity.BoardColumnsEntity;
 import java.sql.Connection;
@@ -39,7 +40,7 @@ public class BoardColumnDAO {
     }
     public List<BoardColumnsEntity> findByBoardId(final Long id) throws SQLException{
         List<BoardColumnsEntity> entities = new ArrayList<>();
-        String sql = "SELECT * FROM board_columns WHERE board_id = ? ORDER BY \"order\";";
+        String sql = "ELECT id, name, \"order\", kind FROM BOARDS_COLUMNS WHERE board_id = ? ORDER BY \"order\";";
         try(var statement = connection.prepareStatement(sql)){
             statement.setLong(1, id);
             statement.executeQuery();
@@ -53,6 +54,43 @@ public class BoardColumnDAO {
                 entities.add(boardColumns);
             }
         }
-        return null;
+        return entities;
+    }
+    public List<BoardColumDTO> findByBoardIdWithDetails( Long id) throws SQLException{
+        List<BoardColumDTO> dtos = new ArrayList<>();
+        var sql =
+                """
+                SELECT 
+                    bc.id,
+                    bc.name,
+                    bc.kind,
+                    (
+                        SELECT COUNT(c.id)
+                        FROM CARDS c
+                        WHERE c.board_column_id = bc.id
+                    ) AS cards_amount
+                FROM 
+                    BOARDS_COLUMNS bc
+                WHERE 
+                    board_id = ?
+                ORDER BY 
+                    "order";
+                """;
+
+
+        try(var statement = connection.prepareStatement(sql)){
+            statement.setLong(1, id);
+            statement.executeQuery();
+            var result =statement.getResultSet();
+            while (result.next()){
+                var boardColumns = new BoardColumDTO(
+                        result.getLong("id_board_column"),
+                        result.getString("name"),
+                        BoardColumnKindEnum.findByName(result.getString("kind")
+                        ));
+                dtos.add(boardColumns);
+            }
+        }
+        return dtos;
     }
 }

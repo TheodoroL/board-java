@@ -66,7 +66,16 @@ public class BoardMenu {
     }
 
     private void showBoard() throws SQLException {
-
+        try(var connection = getConnection()){
+           var optional =  new BoardQueryService(connection)
+                    .showBoardDetails(entity.getBoardId());
+           optional.ifPresent(b-> {
+               System.out.printf("Board [%s, %s]\n", b.id(), b.name());
+                b.columns().forEach(c->{
+                    System.out.printf("coluna [%s] tipo : %s cards ", c.name(), c.kind());
+                });
+           });
+        }
     }
 
     private void showColumn() {
