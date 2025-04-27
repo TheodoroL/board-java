@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static br.com.theodorol.percistence.entity.BoardColumnKindEnum.findByName;
+import static java.util.Objects.isNull;
 
 public class BoardColumnDAO {
     private final Connection connection;
@@ -45,7 +46,7 @@ public class BoardColumnDAO {
     }
     public List<BoardColumnsEntity> findByBoardId(Long boardId) throws SQLException{
         List<BoardColumnsEntity> entities = new ArrayList<>();
-        String sql = "ELECT id, name, \"order\", kind FROM BOARDS_COLUMNS WHERE board_id = ? ORDER BY \"order\";";
+        String sql = "SELECT id_board_column, name, \"order\", kind FROM BOARD_COLUMNS WHERE board_id = ? ORDER BY \"order\";";
         try(var statement = connection.prepareStatement(sql)){
             statement.setLong(1, boardId);
             statement.executeQuery();
@@ -63,24 +64,18 @@ public class BoardColumnDAO {
     }
     public List<BoardColumDTO> findByBoardIdWithDetails( Long boardId) throws SQLException{
         List<BoardColumDTO> dtos = new ArrayList<>();
-        var sql =
-                """
-                SELECT 
-                    bc.id,
-                    bc.name,
-                    bc.kind,
-                    (
-                        SELECT COUNT(c.id)
-                        FROM CARDS c
-                        WHERE c.board_column_id = bc.id
-                    ) AS cards_amount
-                FROM 
-                    BOARDS_COLUMNS bc
-                WHERE 
-                    board_id = ?
-                ORDER BY 
-                    "order";
-                """;
+        var sql = """
+    SELECT bc.id_board_column, 
+           bc.name, 
+           bc.kind, 
+           (SELECT COUNT(c.id_card)
+               FROM CARDS c
+              WHERE c.board__column_id = bc.id_board_column) AS cards_amount
+      FROM BOARD_COLUMNS bc
+     WHERE bc.board_id = ?
+     ORDER BY bc."order";
+""";
+
 
 
         try(var statement = connection.prepareStatement(sql)){
@@ -99,36 +94,44 @@ public class BoardColumnDAO {
         return dtos;
     }
 
-    public Optional<BoardColumnsEntity> findById(final Long boardId) throws SQLException{
-        var sql =
-                """
-                SELECT bc.name,
-                       bc.kind,
-                       c.id,
-                       c.title,
-                       c.description
-                  FROM BOARDS_COLUMNS bc
-                 INNER JOIN CARDS c
-                    ON c.board_column_id = bc.id
-                 WHERE bc.id = ?;
-                """;
-        try(var statement = connection.prepareStatement(sql)){
-            statement.setLong(1, boardId);
-            statement.executeQuery();
-            var resultSet = statement.getResultSet();
-            if (resultSet.next()){
-                var entity = new BoardColumnsEntity();
-                entity.setName(resultSet.getString("bc.name"));
-                entity.setKind(findByName(resultSet.getString("bc.kind")));
-                do {
-                    var card = new CardEntity();
-                    card.setidCard(resultSet.getLong("c.di"));
-                    card.setTitle(resultSet.getString("c.title"));
-                    card.setDescription(resultSet.getString("c.description"));
-                    entity.getCards().add(card);
-                }while (resultSet.next());
+    public Optional<BoardColumnsEntity> findById(final Long boardColumnId) throws SQLException {
+        var sql = """
+        SELECT bc.id_board_column,
+               bc.name,
+               bc.kind,
+               c.id_card,
+               c.title,
+               c.description
+          FROM BOARD_COLUMNS bc
+          LEFT JOIN CARDS c ON c.board__column_id = bc.id_board_column
+         WHERE bc.id_board_column = ?
+         ORDER BY bc."order";
+    """;
+
+        try (var statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, boardColumnId);
+            try (var resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    var entity = new BoardColumnsEntity();
+                    entity.setIdBoardColum(resultSet.getLong("id_board_column"));
+                    entity.setName(resultSet.getString("name"));
+                    entity.setKind(findByName(resultSet.getString("kind")));
+
+                    do {
+                        Long cardId = resultSet.getLong("id_card");
+                        if (cardId != 0) {  // Se não existir card, id_card será NULL/0
+                            var card = new CardEntity();
+                            card.setidCard(cardId);
+                            card.setTitle(resultSet.getString("title"));
+                            card.setDescription(resultSet.getString("description"));
+                            entity.getCards().add(card);
+                        }
+                    } while (resultSet.next());
+
+                    return Optional.of(entity);
+                }
+                return Optional.empty();
             }
-            return Optional.empty();
         }
     }
 }

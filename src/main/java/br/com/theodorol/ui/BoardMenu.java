@@ -2,9 +2,11 @@ package br.com.theodorol.ui;
 
 import br.com.theodorol.percistence.entity.BoardColumnsEntity;
 import br.com.theodorol.percistence.entity.BoardEntity;
+import br.com.theodorol.percistence.entity.CardEntity;
 import br.com.theodorol.service.BoardColumnQueryService;
 import br.com.theodorol.service.BoardQueryService;
 import br.com.theodorol.service.CardQueryService;
+import br.com.theodorol.service.CardService;
 
 import java.sql.SQLException;
 import java.util.Scanner;
@@ -19,7 +21,7 @@ public class BoardMenu {
     }
     public void execute(){
         try {
-            System.out.printf("Bem vindo ao board %s, selecione a operação desejada", entity.getBoardId());
+            System.out.printf("Bem vindo ao board %s, selecione a operação desejada\n", entity.getBoardId());
             var option = -1;
             while (option != 9) {
                 System.out.println("1 - Criar um card");
@@ -56,7 +58,16 @@ public class BoardMenu {
     private void unblockCard() {
     }
 
-    private void createCard() {
+    private void createCard() throws SQLException {
+        var card = new CardEntity();
+        System.out.println("Informe o título do card");
+        card.setTitle(scanner.next());
+        System.out.println("Informe a descrição do card");
+        card.setDescription(scanner.next());
+        card.setBoardColumn(entity.getInitialColumn());
+        try(var connection = getConnection()){
+            new CardService(connection).create(card);
+        }
     }
 
     private void moveCardToNextColumn() {
@@ -93,7 +104,7 @@ public class BoardMenu {
             var column = new BoardColumnQueryService(connection).findById(selectedColumn);
             column.ifPresent(co -> {
                 System.out.printf("Coluna %s tipo %s\n", co.getName(), co.getKind());
-                co.getCards().forEach(ca -> System.out.printf("Card %s - %s\nDescrição: %s",
+                co.getCards().forEach(ca -> System.out.printf("Card%s - %s descrição: %s\n",
                         ca.getIdCard(), ca.getTitle(), ca.getDescription()));
             });
         }

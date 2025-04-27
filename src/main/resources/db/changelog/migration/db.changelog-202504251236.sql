@@ -1,6 +1,5 @@
 CREATE TABLE CARDS(
     id_card SERIAL PRIMARY KEY,
-    name  VARCHAR(255) NOT NULL,
     title VARCHAR(255) NOT NULL,
     description VARCHAR(255) NOT NULL,
     board__column_id BIGINT NOT NULL,
