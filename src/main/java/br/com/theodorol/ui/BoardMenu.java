@@ -1,5 +1,6 @@
 package br.com.theodorol.ui;
 
+import br.com.theodorol.dto.BoardColumnInfoDTO;
 import br.com.theodorol.percistence.entity.BoardColumnsEntity;
 import br.com.theodorol.percistence.entity.BoardEntity;
 import br.com.theodorol.percistence.entity.CardEntity;
@@ -70,7 +71,17 @@ public class BoardMenu {
         }
     }
 
-    private void moveCardToNextColumn() {
+    private void moveCardToNextColumn() throws SQLException {
+        System.out.println("Informe o id do card que deseja mover para a próxima coluna");
+        var cardId = scanner.nextLong();
+        var boardColumnsInfo = entity.getBoardColumns().stream()
+                .map(bc -> new BoardColumnInfoDTO(bc.getIdBoardColum(), bc.getOrder(), bc.getKind()))
+                .toList();
+        try(var connection = getConnection()){
+            new CardService(connection).moveToNextColumn(cardId, boardColumnsInfo);
+        } catch (RuntimeException ex){
+            System.out.println(ex.getMessage());
+        }
     }
 
     private void blockCard() {

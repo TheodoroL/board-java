@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.util.Optional;
 
 import static br.com.theodorol.percistence.converter.OffsetDateTimeConverter.toOffsetDateTime;
+import static java.util.Objects.nonNull;
 
 public class CardDAO {
     private final Connection connection;
@@ -33,6 +34,15 @@ public class CardDAO {
         return entity;
     }
 
+    public void moveToColumn(final Long columnId, final Long cardId) throws SQLException{
+        var sql = "UPDATE cards SET board__column_id = ? WHERE id_card = ?;";
+        try(var statement = connection.prepareStatement(sql)){
+            var i = 1;
+            statement.setLong(i ++, columnId);
+            statement.setLong(i, cardId);
+            statement.executeUpdate();
+        }
+    }
 
     public Optional<CardDetailsDTO> findById(final Long id) throws SQLException {
         var sql = """
@@ -62,15 +72,15 @@ public class CardDAO {
             var resultSet = statement.executeQuery();
             if (resultSet.next()) {
                 var dto = new CardDetailsDTO(
-                        resultSet.getLong("id_card"),              // sem "c."
-                        resultSet.getString("title"),              // sem "c."
-                        resultSet.getString("description"),        // sem "c."
-                        resultSet.getString("block_reason") == null, // sem "b."
-                        toOffsetDateTime(resultSet.getTimestamp("blocked_at")), // sem "b."
-                        resultSet.getString("block_reason"),       // sem "b."
+                        resultSet.getLong("id_card"),
+                        resultSet.getString("title"),
+                        resultSet.getString("description"),
+                        nonNull(resultSet.getString("block_reason")),
+                        toOffsetDateTime(resultSet.getTimestamp("blocked_at")),
+                        resultSet.getString("block_reason"),
                         resultSet.getInt("blocks_amount"),
-                        resultSet.getLong("board__column_id"),      // cuidado aqui: é `board__column_id`
-                        resultSet.getString("name")                 // da tabela BOARD_COLUMNS (alias bc)
+                        resultSet.getLong("board__column_id"),
+                        resultSet.getString("name")
                 );
                 return Optional.of(dto);
             }
