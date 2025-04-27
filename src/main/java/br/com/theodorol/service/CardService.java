@@ -90,7 +90,7 @@ public class CardService {
         }
     }
 
-    public void block(final Long id, final String reason, final List<BoardColumnInfoDTO> boardColumnsInfo) throws SQLException {
+    public void block( Long id, String reason,  List<BoardColumnInfoDTO> boardColumnsInfo) throws SQLException {
         try{
             var dao = new CardDAO(connection);
             var optional = dao.findById(id);
@@ -112,6 +112,25 @@ public class CardService {
             }
             var blockDAO = new BlockDAO(connection);
             blockDAO.block(reason, id);
+            connection.commit();
+        }catch (SQLException ex) {
+            connection.rollback();
+            throw ex;
+        }
+    }
+    public void unblock( Long id,  String reason) throws SQLException {
+        try{
+            var dao = new CardDAO(connection);
+            var optional = dao.findById(id);
+            var dto = optional.orElseThrow(
+                    () -> new EntityNotFoundException("O card de id %s não foi encontrado".formatted(id))
+            );
+            if (!dto.blocked()){
+                var message = "O card %s não está bloqueado".formatted(id);
+                throw new CardBlockedException(message);
+            }
+            var blockDAO = new BlockDAO(connection);
+            blockDAO.unblock(reason, id);
             connection.commit();
         }catch (SQLException ex) {
             connection.rollback();

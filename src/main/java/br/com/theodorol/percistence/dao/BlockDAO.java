@@ -12,8 +12,18 @@ public class BlockDAO {
     public BlockDAO(Connection connection) {
         this.connection = connection;
     }
-    public void block(final String reason, final Long cardId) throws SQLException, SQLException {
+    public void block( String reason,  Long cardId) throws SQLException, SQLException {
         var sql = "INSERT INTO BLOCKS (blocked_at, block_reason, card_id) VALUES (?, ?, ?);";
+        try(var statement = connection.prepareStatement(sql)){
+            var i = 1;
+            statement.setTimestamp(i ++, toTimestamp(OffsetDateTime.now()));
+            statement.setString(i ++, reason);
+            statement.setLong(i, cardId);
+            statement.executeUpdate();
+        }
+    }
+    public void unblock( String reason,  Long cardId) throws SQLException{
+        var sql = "UPDATE BLOCKS SET unblocked_at = ?, unblock_reason = ? WHERE card_id = ? AND unblock_reason IS NULL;";
         try(var statement = connection.prepareStatement(sql)){
             var i = 1;
             statement.setTimestamp(i ++, toTimestamp(OffsetDateTime.now()));
